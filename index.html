@@ -1,0 +1,69 @@
+<html>
+    <header>
+        <meta charset="utf-8">
+        <title>Remote control GUI</title>
+    </header>
+    <body>
+        <div id="coordsContainer">
+            <div id="coordsLocalContainer">
+                Local:
+                <div id="coordsLocalValue">X:Y</div>
+            </div>
+            <div id="coordsRemoteContainer">
+                Remote:
+                <div id="coordsRemoteValue">X:Y</div>
+            </div>
+            <div id="latencyContainer">
+                Latency:
+                <div id="latencyValue">?ms</div>
+            </div>
+        </div>
+
+        <div id="remoteCursor" style="width:4px;height:4px;background:red;margin:0;position:absolute;border-radius:50%;margin:-2px;"></div>
+
+        <script>
+
+            const address = "ws://localhost:9002"
+
+            const socket = new WebSocket(address);
+
+            const domLocalValue = document.getElementById('coordsLocalValue');
+            const domRemoteValue = document.getElementById('coordsRemoteValue');
+            const domLatencyValue = document.getElementById('latencyValue');
+            
+            socket.onmessage = function(event) {
+                const message = event.data;
+                const messageSplit = message.split(':');
+                domRemoteValue.innerText = message;
+                domLatencyValue.innerText = (new Date().getTime() - parseInt(messageSplit[2])) + 'ms';
+                remoteCursor.style.left = messageSplit[0] + "px";
+                remoteCursor.style.top = messageSplit[1] + "px";
+            }
+
+            document.body.addEventListener('mousedown', e => {
+                x = e.clientX;
+                y = e.clientY;
+                updateCoords(x,y,'mousedown');
+            });
+
+            document.body.addEventListener('mousemove', e => {
+                x = e.clientX;
+                y = e.clientY;
+                updateCoords(x,y,'mousemove');
+            });
+
+            document.body.addEventListener('mouseup', e => {
+                x = e.clientX;
+                y = e.clientY;
+                updateCoords(x,y,'mouseup');
+            });
+
+            const updateCoords = (x,y,action) => {
+                const value = x+":"+y+":"+new Date().getTime()+":"+action;
+                socket.send(value);
+                domLocalValue.innerText = value;
+            }
+
+        </script>
+    </body>
+</html>
