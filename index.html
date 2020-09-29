@@ -3,9 +3,9 @@
         <meta charset="utf-8">
         <title>Remote control GUI</title>
     </header>
-    <body>
+    <body style="position:fixed;overflow:hidden;width:100%;height:100%;">
         
-        <div id="welcomeScreen" style="position:absolute;top:0;left:0;width:100%;height:0;display:block;">
+        <div id="welcomeScreen" style="position:absolute;top:0;left:0;width:100%;height:100%;display:block;background:#fff;z-index:9999;">
             <input id="remoteAddress" value="ws://localhost:9002" />
             <button onclick="connectServer();">Connect</button>
         </div>
@@ -31,7 +31,8 @@
             
             const connectServer = () => {
                 
-                const address = document.getElementById('welcomeScreen').value;
+                const address = document.getElementById('remoteAddress').value;
+                console.log('Connecting to ' + address);
 
                 const socket = new WebSocket(address);
 
@@ -39,7 +40,12 @@
                 const domRemoteValue = document.getElementById('coordsRemoteValue');
                 const domLatencyValue = document.getElementById('latencyValue');
                 
-                document.getElementById('remoteAddress').style.display = 'none';
+                const lastCoordinates = {
+                    x: 0,
+                    y: 0
+                }
+                
+                document.getElementById('welcomeScreen').style.display = 'none';
                 
                 socket.onmessage = function(event) {
                     const message = event.data;
@@ -51,25 +57,52 @@
                 }
 
                 document.body.addEventListener('mousedown', e => {
+                    e.preventDefault();
                     x = e.clientX;
                     y = e.clientY;
                     updateCoords(x,y,'mousedown');
                 });
 
                 document.body.addEventListener('mousemove', e => {
+                    e.preventDefault();
                     x = e.clientX;
                     y = e.clientY;
                     updateCoords(x,y,'mousemove');
                 });
 
                 document.body.addEventListener('mouseup', e => {
+                    e.preventDefault();
                     x = e.clientX;
                     y = e.clientY;
                     updateCoords(x,y,'mouseup');
                 });
+                
+                
+                document.body.addEventListener("touchstart", e => {
+                    x = e.touches[0].clientX;
+                    y = e.touches[0].clientY;
+                    updateCoords(x,y,'touchstart');
+                }, false);
+                
+                document.body.addEventListener("touchend", e => {
+                    updateCoords(lastCoordinates.x,lastCoordinates.y,'touchend');
+                }, false);
+                
+                document.body.addEventListener("touchcancel", e => {
+                    updateCoords(lastCoordinates.x,lastCoordinates.y,'touchcancel');
+                }, false);
+                
+                document.body.addEventListener("touchmove", e => {
+                    e.preventDefault();
+                    x = e.touches[0].clientX;
+                    y = e.touches[0].clientY;
+                    updateCoords(x,y,'touchmove');
+                }, false);
 
                 const updateCoords = (x,y,action) => {
-                    const value = x+":"+y+":"+new Date().getTime()+":"+action;
+                    lastCoordinates.x = x;
+                    lastCoordinates.y = y;
+                    const value = Math.round(x)+":"+Math.round(y)+":"+new Date().getTime()+":"+action;
                     socket.send(value);
                     domLocalValue.innerText = value;
                 }
