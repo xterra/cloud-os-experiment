@@ -3,6 +3,8 @@
 #include <websocketpp/config/asio_no_tls.hpp>
 #include <websocketpp/server.hpp>
 
+#include "xpointer.hpp"
+
 typedef websocketpp::server<websocketpp::config::asio> server;
 
 using websocketpp::lib::placeholders::_1;
@@ -33,6 +35,9 @@ void on_message(server* s, websocketpp::connection_hdl hdl, message_ptr msg) {
 }
 
 int main() {
+    
+    testPoints();
+    
     // Create a server endpoint
     server echo_server;
     int port = 9002;
@@ -64,5 +69,3 @@ int main() {
         std::cout << "other exception" << std::endl;
     }
 }
-
-/* Exmple */
