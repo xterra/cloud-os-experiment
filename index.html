@@ -4,6 +4,12 @@
         <title>Remote control GUI</title>
     </header>
     <body>
+        
+        <div id="welcomeScreen" style="position:absolute;top:0;left:0;width:100%;height:0;display:block;">
+            <input id="remoteAddress" value="ws://localhost:9002" />
+            <button onclick="connectServer();">Connect</button>
+        </div>
+        
         <div id="coordsContainer">
             <div id="coordsLocalContainer">
                 Local:
@@ -22,46 +28,51 @@
         <div id="remoteCursor" style="width:4px;height:4px;background:red;margin:0;position:absolute;border-radius:50%;margin:-2px;"></div>
 
         <script>
-
-            const address = "ws://localhost:9002"
-
-            const socket = new WebSocket(address);
-
-            const domLocalValue = document.getElementById('coordsLocalValue');
-            const domRemoteValue = document.getElementById('coordsRemoteValue');
-            const domLatencyValue = document.getElementById('latencyValue');
             
-            socket.onmessage = function(event) {
-                const message = event.data;
-                const messageSplit = message.split(':');
-                domRemoteValue.innerText = message;
-                domLatencyValue.innerText = (new Date().getTime() - parseInt(messageSplit[2])) + 'ms';
-                remoteCursor.style.left = messageSplit[0] + "px";
-                remoteCursor.style.top = messageSplit[1] + "px";
-            }
+            const connectServer = () => {
+                
+                const address = document.getElementById('welcomeScreen').value;
 
-            document.body.addEventListener('mousedown', e => {
-                x = e.clientX;
-                y = e.clientY;
-                updateCoords(x,y,'mousedown');
-            });
+                const socket = new WebSocket(address);
 
-            document.body.addEventListener('mousemove', e => {
-                x = e.clientX;
-                y = e.clientY;
-                updateCoords(x,y,'mousemove');
-            });
+                const domLocalValue = document.getElementById('coordsLocalValue');
+                const domRemoteValue = document.getElementById('coordsRemoteValue');
+                const domLatencyValue = document.getElementById('latencyValue');
+                
+                document.getElementById('remoteAddress').style.display = 'none';
+                
+                socket.onmessage = function(event) {
+                    const message = event.data;
+                    const messageSplit = message.split(':');
+                    domRemoteValue.innerText = message;
+                    domLatencyValue.innerText = (new Date().getTime() - parseInt(messageSplit[2])) + 'ms';
+                    remoteCursor.style.left = messageSplit[0] + "px";
+                    remoteCursor.style.top = messageSplit[1] + "px";
+                }
 
-            document.body.addEventListener('mouseup', e => {
-                x = e.clientX;
-                y = e.clientY;
-                updateCoords(x,y,'mouseup');
-            });
+                document.body.addEventListener('mousedown', e => {
+                    x = e.clientX;
+                    y = e.clientY;
+                    updateCoords(x,y,'mousedown');
+                });
 
-            const updateCoords = (x,y,action) => {
-                const value = x+":"+y+":"+new Date().getTime()+":"+action;
-                socket.send(value);
-                domLocalValue.innerText = value;
+                document.body.addEventListener('mousemove', e => {
+                    x = e.clientX;
+                    y = e.clientY;
+                    updateCoords(x,y,'mousemove');
+                });
+
+                document.body.addEventListener('mouseup', e => {
+                    x = e.clientX;
+                    y = e.clientY;
+                    updateCoords(x,y,'mouseup');
+                });
+
+                const updateCoords = (x,y,action) => {
+                    const value = x+":"+y+":"+new Date().getTime()+":"+action;
+                    socket.send(value);
+                    domLocalValue.innerText = value;
+                }
             }
 
         </script>

@@ -21,21 +21,13 @@ void testPoints() {
     
     XSelectInput(display, rootWin, KeyReleaseMask);
     
-    std::cout << "5:5" << std::endl;
-    XWarpPointer(display, None, rootWin, 0, 0, 0, 0, 100, 100);
-    XFlush(display);
-    sleep(1);
-    std::cout << "50:5" << std::endl;
-    XWarpPointer(display, None, rootWin, 0, 0, 0, 0, 200, 200);
-    XFlush(display);
-    sleep(1);
-    std::cout << "5:50" << std::endl;
-    XWarpPointer(display, rootWin, rootWin, 0, 0, 0, 0, 5, 50);
-    XFlush(display);
-    sleep(1);
-    std::cout << "50:50" << std::endl;
-    XWarpPointer(display, rootWin, rootWin, 0, 0, 0, 0, 50, 50);
-    XFlush(display);
-    sleep(1);
+    int i;
+    for (i=0;i<=20;i++) {
+        std::cout << i << ":" << i << std::endl;
+        XWarpPointer(display, None, rootWin, 0, 0, 0, 0, i*5+10, i*5+10);
+        XFlush(display);
+        sleep(1);
+    }
+    
     XCloseDisplay(display);
 }
