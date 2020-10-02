@@ -24,6 +24,7 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		B21F679625274CD700EF55CF /* index.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; path = index.js; sourceTree = "<group>"; };
 		B2A625C82523406C00A1E17A /* agent */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = agent; sourceTree = BUILT_PRODUCTS_DIR; };
 		B2A625CB2523406C00A1E17A /* main.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = main.cpp; sourceTree = "<group>"; };
 		B2A625D3252340AE00A1E17A /* Dockerfile */ = {isa = PBXFileReference; lastKnownFileType = text; path = Dockerfile; sourceTree = "<group>"; };
@@ -52,6 +53,7 @@
 		B2A625BF2523406C00A1E17A = {
 			isa = PBXGroup;
 			children = (
+				B21F679625274CD700EF55CF /* index.js */,
 				B2A625D92523413600A1E17A /* docs */,
 				B2A625D82523411D00A1E17A /* index.html */,
 				B2A625D72523410700A1E17A /* README.md */,
@@ -286,7 +288,10 @@
 					/usr/local/lib,
 					/usr/X11R6/lib,
 				);
-				OTHER_LDFLAGS = "-lX11";
+				OTHER_LDFLAGS = (
+					"-lX11",
+					"-lXtst",
+				);
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
 			name = Debug;
@@ -303,7 +308,10 @@
 					/usr/local/lib,
 					/usr/X11R6/lib,
 				);
-				OTHER_LDFLAGS = "-lX11";
+				OTHER_LDFLAGS = (
+					"-lX11",
+					"-lXtst",
+				);
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
 			name = Release;

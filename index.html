@@ -23,11 +23,74 @@
                 Latency:
                 <div id="latencyValue">?ms</div>
             </div>
+            <div id="latencyAvgContainer">
+                Latency avg:
+                <div id="latencyAvgValue">?ms</div>
+            </div>
+            <div id="latencyWorstContainer">
+                Latency worst:
+                <div id="latencyWorstValue">?ms</div>
+            </div>
+            <div id="packagesSentContainer">
+                Packages sent:
+                <div id="packagesSentValue">?ms</div>
+            </div>
         </div>
 
         <div id="remoteCursor" style="width:4px;height:4px;background:red;margin:0;position:absolute;border-radius:50%;margin:-2px;"></div>
 
         <script>
+        
+            window.onload = () => {
+              document.getElementById('remoteAddress').value = 'ws://' + window.location.hostname + ':9002'
+            }
+            
+            const actionsList = [
+                                 "reset",
+                                 "mouseup",
+                                 "mousedown",
+                                 "mousemove",
+                                 "touchstart",
+                                 "touchend",
+                                 "touchcancel",
+                                 "touchmove",
+                                 "keydown",
+                                 "keyup"
+            ]
+            
+            const fixedButtonNamesMap = {
+                'Space': 'space',
+                'CapsLock': 'Caps_Lock',
+                'AltLeft': 'Alt_L',
+                'AltRight': 'Alt_R',
+                'ShiftLeft': 'Shift_L',
+                'ShiftRight': 'Shift_R',
+                'OSLeft': 'Meta_L',
+                'OSRight': 'Meta_R',
+                'MetaLeft': 'Meta_L',
+                'MetaRight': 'Meta_R',
+                'ControlLeft': 'Control_L',
+                'ControlRight': 'Control_L',
+                'Backspace': 'BackSpace',
+                'Enter': 'Return',
+                'ArrowUp': 'Up',
+                'ArrowRight': 'Right',
+                'ArrowDown': 'Down',
+                'ArrowLeft': 'Left',
+                'U+0008': 'BackSpace',
+                'U+007F': 'Delete',
+                'U+0009': 'Tab',
+                ' ': 'space'
+            }
+
+            const getUnicode = (char) => {
+                var code = char.charCodeAt(0);
+                var codeHex = code.toString(16).toUpperCase();
+                while (codeHex.length < 4) {
+                    codeHex = "0" + codeHex;
+                }
+                return "U" + codeHex;
+            }
             
             const connectServer = () => {
                 
@@ -39,11 +102,19 @@
                 const domLocalValue = document.getElementById('coordsLocalValue');
                 const domRemoteValue = document.getElementById('coordsRemoteValue');
                 const domLatencyValue = document.getElementById('latencyValue');
+                const domLatencyAvgValue = document.getElementById('latencyAvgValue');
+                const domLatencyWorstValue = document.getElementById('latencyWorstValue');
+                const packagesSentValue = document.getElementById('packagesSentValue');
                 
                 const lastCoordinates = {
                     x: 0,
                     y: 0
                 }
+                
+                const previousLatency = [];
+                let worstLatency = 0;
+                
+                let packagesSent = 0;
                 
                 document.getElementById('welcomeScreen').style.display = 'none';
                 
@@ -51,9 +122,20 @@
                     const message = event.data;
                     const messageSplit = message.split(':');
                     domRemoteValue.innerText = message;
-                    domLatencyValue.innerText = (new Date().getTime() - parseInt(messageSplit[2])) + 'ms';
-                    remoteCursor.style.left = messageSplit[0] + "px";
-                    remoteCursor.style.top = messageSplit[1] + "px";
+                    const latency = (new Date().getTime() - parseInt(messageSplit[1]))
+                    domLatencyValue.innerText = latency + 'ms';
+                    previousLatency.push(latency);
+                    if (previousLatency.length > 20) {
+                      previousLatency.shift();
+                    }
+                    const avgLatency = Math.floor(previousLatency.reduce((a, b) => a + b, 0) / previousLatency.length);
+                    if (latency > worstLatency) {
+                      worstLatency = latency;
+                      domLatencyWorstValue.innerText = worstLatency+'ms';
+                    }
+                    domLatencyAvgValue.innerText = avgLatency + 'ms';
+                    remoteCursor.style.left = messageSplit[2] + "px";
+                    remoteCursor.style.top = messageSplit[3] + "px";
                 }
 
                 document.body.addEventListener('mousedown', e => {
@@ -98,14 +180,52 @@
                     y = e.touches[0].clientY;
                     updateCoords(x,y,'touchmove');
                 }, false);
+                
+                document.body.addEventListener("keydown", e => {
+                    e.preventDefault();
+                    console.log(e);
+                    let key = e.key;
+                    if (key.length > 1) {
+                        key = e.code;
+                    } else {
+                        key = getUnicode(key);
+                    }
+                    updateKey(key,'keydown');
+                }, false);
+                
+                document.body.addEventListener("keyup", e => {
+                    e.preventDefault();
+                    let key = e.key;
+                    if (key.length > 1) {
+                        key = e.code;
+                    } else {
+                        key = getUnicode(key);
+                    }
+                    updateKey(key,'keyup');
+                }, false);
 
                 const updateCoords = (x,y,action) => {
                     lastCoordinates.x = x;
                     lastCoordinates.y = y;
-                    const value = Math.round(x)+":"+Math.round(y)+":"+new Date().getTime()+":"+action;
-                    socket.send(value);
-                    domLocalValue.innerText = value;
+                    sendData(Math.round(x)+":"+Math.round(y),action);
                 }
+
+                const updateKey = (key,action) => {
+                    if (typeof fixedButtonNamesMap[key] !== "undefined") {
+                        key = fixedButtonNamesMap[key];
+                    }
+                    key = key.replace("+", "");
+                    console.log(key);
+                    sendData(key,action);
+                }
+
+                const sendData = (data,action) => {
+                    data = actionsList.indexOf(action)+":"+new Date().getTime()+":"+data;
+                    socket.send(data);
+                    packagesSentValue.innerText = ++packagesSent;
+                    domLocalValue.innerText = data;
+                }
+                
             }
 
         </script>
